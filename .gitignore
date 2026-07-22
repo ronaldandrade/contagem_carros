@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+*.pt
+contagens.csv
+.claude/
+.vscode/
+*.MOV
+*.mp4
+frames_*/
+
