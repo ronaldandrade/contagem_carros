@@ -79,13 +79,20 @@ espalhados pela gravação e cada veículo foi marcado à mão, com uma caixa po
 veículo, no formato do YOLO (um arquivo de texto por imagem, com a classe e a
 posição da caixa em valores de 0 a 1).
 
-São 104 caixas marcadas ao todo, divididas em três classes: 95 carros, 8 ônibus e
-1 moto. Para o treino, as imagens foram separadas em 48 para treinar e 12 para
+São 163 caixas marcadas ao todo, divididas em três classes: 134 carros, 28 ônibus
+e 1 moto. Para o treino, as imagens foram separadas em 48 para treinar e 12 para
 validar.
 
-Essa distribuição é bem desigual, e isso limita o que dá para afirmar: o
-resultado de carro tem base razoável, o de ônibus é apertado e o de moto não
-permite nenhuma conclusão.
+Esse número engana, e entender por quê acabou virando a parte mais interessante
+do projeto. Os 60 frames saíram de um vídeo de cerca de 310 segundos, ou seja, um
+frame a cada 5 segundos. Um ônibus demora mais que isso para atravessar a cena,
+então as 28 caixas de ônibus não são 28 ônibus, são cinco ou seis ônibus
+fotografados várias vezes. O mesmo vale para os carros. A amostra real é bem
+menor do que a contagem de caixas sugere.
+
+A distribuição também é bem desigual, o que limita o que dá para afirmar: o
+resultado de carro tem alguma base, o de ônibus é apertado e o de moto, com um
+único exemplo, não permite conclusão nenhuma.
 
 ## As medidas usadas
 
@@ -123,33 +130,54 @@ Contagem em duas gravações da mesma rua: 125 veículos, sendo 58 na janela das
 Na avaliação do detector, a diferença entre usar o modelo pronto e treinar um
 modelo com as imagens do próprio vídeo foi grande:
 
+Nos 60 frames marcados à mão:
+
 |  | YOLOv8n genérico | YOLOv8n treinado com o vídeo |
 |---|---|---|
 | mAP com sobreposição de 0,5 | 0,060 | 0,660 |
-| Melhor F1 | 0,154 | 0,921 |
+| Melhor F1 | 0,154 | 0,943 |
+| Acerto em carro | 0,091 | 0,981 |
+| Acerto em ônibus | 0,089 | 1,000 |
 
-O modelo genérico nunca tinha visto esse ângulo, essa distância nem essa
-iluminação, e por isso errava ou simplesmente não via boa parte dos veículos.
-Treinar com cerca de 50 imagens do próprio cenário resolveu isso. O gargalo não
-era a técnica, era a diferença entre o cenário do treino original e o cenário
-real.
+Parte desse salto é real: o modelo genérico nunca tinha visto esse ângulo, essa
+distância nem essa iluminação, e por isso errava ou simplesmente não via boa
+parte dos veículos. Mas a outra parte é ilusão, e é isso que o projeto acabou
+mostrando de mais útil.
 
-Vale ler esse número com cuidado:
+O modelo treinado tira nota 1,000 na classe ônibus. Nenhum detector honesto faz
+isso com 60 frames. O motivo é que o mesmo ônibus aparece em vários frames
+seguidos, e esses frames foram divididos ao acaso entre treino e validação. Ou
+seja, o modelo foi testado com veículos que ele já tinha visto no treino,
+gravados meio segundo antes. Ele não aprendeu a reconhecer um ônibus, aprendeu a
+reconhecer aquele ônibus.
 
-- 60 frames marcados à mão é pouco. Serve para mostrar que o caminho funciona,
-  não para cravar um valor definitivo.
+Dá para ver isso mudando só o conjunto onde a nota é medida:
+
+| | nos 60 frames | só nos 12 de validação |
+|---|---|---|
+| genérico, melhor F1 | 0,154 | 0,065 |
+| treinado, melhor F1 | 0,943 | 0,921 |
+
+O modelo treinado vai melhor nos 60 frames porque 48 deles são exatamente as
+imagens em que ele treinou.
+
+Outras coisas a considerar na leitura desses números:
+
 - O resultado zerado da classe moto não quer dizer que o modelo é ruim com motos.
-  Quer dizer que havia um único exemplo, o que não permite medir nada.
+  Quer dizer que havia um único exemplo, o que não permite medir nada. Como o mAP
+  é a média das classes, esse zero sozinho derruba o resultado geral de perto de
+  0,99 para 0,660.
 - O mesmo conjunto de validação foi usado para escolher o melhor ponto do treino
-  e para o resultado final. O ideal seria um terceiro conjunto separado, o que
-  não cabia em 60 imagens. Por causa disso, o resultado está provavelmente um
-  pouco melhor do que seria em imagens novas.
+  e para o resultado final, o que empurra o número para cima mais uma vez.
 - É provável que o modelo tenha aprendido esse cenário específico, e não trânsito
-  em geral. Todas as imagens vêm da mesma câmera e do mesmo ângulo. Para uma
-  câmera fixa isso é aceitável, mas não dá para dizer que ele funcionaria em
-  outra rua.
+  em geral. Todas as imagens vêm da mesma câmera e do mesmo ângulo.
 - A sobreposição de 0,5 é o critério mais generoso. Repetir a avaliação com 0,75
   mostraria se as caixas estão realmente bem ajustadas.
+
+A lição que fica: em vídeo, frames vizinhos não são exemplos independentes, e
+dividir treino e validação sorteando frames quase sempre vaza. Um resultado bom
+demais para o tamanho do dataset é motivo para investigar, não para comemorar.
+Os detalhes dessa investigação estão em `docs/avaliacao.md`.
 
 Os gráficos ficam em `outputs/` e os resultados do treino em
 `runs/detect/runs/treino_trafego/`.
