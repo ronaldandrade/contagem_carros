@@ -134,6 +134,35 @@ Ele confere a matemática do AP em três casos que dá para verificar na mão: d
 - **Seção nova no artigo do blog:** entra depois da validação manual (contagem) — a contagem valida o *pipeline* de ponta a ponta; a curva P-R valida o *detector* isoladamente. Os dois níveis de avaliação juntos são o que fecha o argumento "eu entendo e sei medir o que fiz".
 - **Portfólio/mestrado:** `mAP@0.5 = X` no seu vídeo, com a metodologia acima, é uma linha de resultado de verdade. Some ao estudo de falha e você tem material de artigo curto para WVC / SIBGRAPI workshop / ENIAC.
 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+## Experimento: treinei um modelo no meu próprio dataset
+
+Depois de rodar a avaliação com o YOLOv8n genérico (pré-treinado no COCO), resolvi testar quanto eu ganharia especializando o modelo no meu próprio vídeo. Peguei os 60 frames anotados, separei 48 para treino e 12 para validação, e treinei um YOLOv8n do zero (partindo dos pesos COCO) por 60 epochs em CPU.
+
+O resultado:
+
+| | YOLOv8n genérico (COCO) | YOLOv8n treinado no meu dataset |
+|---|---|---|
+| mAP@0.5 | 0,060 | 0,660 |
+| Melhor F1 | 0,154 | 0,921 |
+
+O salto é grande e, pensando bem, faz todo sentido: o modelo genérico nunca tinha visto o ângulo, a distância nem a iluminação do meu vídeo, então errava ou simplesmente não detectava boa parte dos veículos. Especializar no meu próprio domínio resolveu isso de forma dramática. Esse é o argumento que eu quero levar para qualquer conteúdo sobre o projeto: especializar bate genérico, e dá para provar isso com dois números.
+
+Só que não vou empolgar demais com o 0,66 sem colocar as ressalvas na mesma frase:
+
+1. **O dataset é minúsculo.** 60 frames anotados, 48 de treino e 12 de validação. Isso está bem abaixo dos 100 a 200 frames que eu mesmo recomendo acima como estimativa razoável. É o mínimo para o pipeline provar que funciona, não um número que eu defenderia como definitivo.
+
+2. **A classe moto não é um resultado real.** No split de validação eu tinha só 1 instância de moto (no dataset inteiro, 95 motos contra 8 ônibus e 134 carros, então a distribuição já é bem desigual entre os frames). AP igual a 0,000 nessa classe não quer dizer que o modelo é ruim em moto, quer dizer que 1 exemplo não permite nenhuma conclusão. Prefiro tratar essa classe como "dados insuficientes" do que publicar o número como se fosse desempenho de verdade.
+
+3. **Usei o mesmo split de validação para escolher o melhor checkpoint e para o relatório final.** O ideal seria ter um terceiro split de teste, nunca visto durante o treino, reservado só para a métrica final. Com 60 imagens não dava para fatiar em três com significância estatística, então isso é uma limitação de escala, mas prefiro declarar do que deixar escondido: o mAP relatado provavelmente está um pouco inflado por causa disso.
+
+4. **É bem provável que o modelo tenha decorado o cenário, não aprendido trânsito em geral.** Treinei 60 épocas em 48 imagens, todas da mesma câmera, mesmo ângulo, com poucos veículos diferentes se repetindo entre os frames. Carro e ônibus foram bem justamente porque são visualmente consistentes nesse cenário específico. Isso não invalida o experimento (é exatamente o caso de uso real de uma câmera fixa), mas é diferente de alegar que o modelo generaliza para trânsito de outro lugar.
+
+5. **mAP@0,5 continua sendo o padrão mais generoso.** Vale repetir o experimento com `--iou 0.75` para ver se as caixas estão realmente justas ou só no lugar certo com tamanho errado.
+
+Se eu tivesse que resumir esse experimento numa frase para o portfólio, seria: fine-tuning em cerca de 50 frames do próprio cenário elevou o mAP@0,5 de 0,06 para 0,66 e o F1 ideal de 0,15 para 0,92, evidência forte de que o gargalo não era o algoritmo, era o domínio. Mas o tamanho da amostra, especialmente para motos, ainda me impede de alegar qualquer generalização.
+
 ## Limitações honestas (diga no conteúdo)
 
 - **mAP@0.5 é generoso.** O padrão COCO reporta a média de mAP para IoU de 0,5 a 0,95. Rodar `--iou 0.75` mostra quão apertadas são realmente as suas caixas — vale reportar os dois.
