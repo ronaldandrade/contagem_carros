@@ -10,22 +10,28 @@ import pandas as pd
 from nucleo_avaliacao import (avaliar_classe, casar_por_imagem,
                               metricas_por_limiar)
 
-CLASSES = {2: "carro", 3: "moto", 5: "onibus", 7: "caminhao"}
+CLASSES_COCO = {2: "carro", 3: "moto", 5: "onibus", 7: "caminhao"}
 # Mapeamento das classes do data.yaml (Roboflow, ordem alfabetica: bus, car, motocycle)
 # para os IDs de classe do COCO usados pelo modelo YOLO pre-treinado.
 ROBOFLOW_PARA_COCO = {0: 5, 1: 2, 2: 3}
+
+# Classes de um modelo treinado neste dataset (mesma ordem do data.yaml), sem
+# necessidade de mapear para o COCO: o GT ja usa esses IDs diretamente.
+CLASSES_CUSTOM = {0: "onibus", 1: "carro", 2: "moto"}
+GT_IDENTIDADE = {0: 0, 1: 1, 2: 2}
+
 AZUL, LARANJA, VERDE, CINZA, TEXTO = "#2f6fdd", "#e07b39", "#2e9e6b", "#c9ced6", "#1f2328"
 
 
-def ler_gt_yolo(caminho_txt, largura, altura):
-    caixas = {c: [] for c in CLASSES}
+def ler_gt_yolo(caminho_txt, largura, altura, classes, mapa_gt):
+    caixas = {c: [] for c in classes}
     if not Path(caminho_txt).exists():
         return caixas
     for linha in Path(caminho_txt).read_text().strip().splitlines():
         if not linha.strip():
             continue
         partes = linha.split()
-        cls = ROBOFLOW_PARA_COCO.get(int(partes[0]))
+        cls = mapa_gt.get(int(partes[0]))
         if cls is None:
             continue
         cx, cy, w, h = map(float, partes[1:5])
@@ -38,16 +44,16 @@ def ler_gt_yolo(caminho_txt, largura, altura):
     return {c: np.array(v, dtype=float).reshape(-1, 4) for c, v in caixas.items()}
 
 
-def rodar_deteccoes(modelo_path, imagens, conf_min):
+def rodar_deteccoes(modelo_path, imagens, conf_min, classes):
     from ultralytics import YOLO
     modelo = YOLO(modelo_path)
-    preds_por_img = {c: [] for c in CLASSES}
+    preds_por_img = {c: [] for c in classes}
     tamanhos = []
     for img in imagens:
-        r = modelo(str(img), conf=conf_min, classes=list(CLASSES), verbose=False)[0]
+        r = modelo(str(img), conf=conf_min, classes=list(classes), verbose=False)[0]
         h, w = r.orig_shape
         tamanhos.append((img, w, h))
-        caixas = {c: [] for c in CLASSES}
+        caixas = {c: [] for c in classes}
         if r.boxes is not None and len(r.boxes):
             xyxy = r.boxes.xyxy.cpu().numpy()
             conf = r.boxes.conf.cpu().numpy()
@@ -55,7 +61,7 @@ def rodar_deteccoes(modelo_path, imagens, conf_min):
             for b, cf, cl in zip(xyxy, conf, cls):
                 if cl in caixas:
                     caixas[cl].append([b[0], b[1], b[2], b[3], cf])
-        for c in CLASSES:
+        for c in classes:
             preds_por_img[c].append(np.array(caixas[c], dtype=float).reshape(-1, 5))
     return preds_por_img, tamanhos
 
@@ -67,18 +73,26 @@ def main():
     ap.add_argument("--modelo", default="yolov8n.pt")
     ap.add_argument("--iou", type=float, default=0.5)
     ap.add_argument("--conf-min", type=float, default=0.001)
+    ap.add_argument("--classes", choices=["coco", "custom"], default="coco",
+                     help="'coco' para modelos pre-treinados no COCO; 'custom' para um modelo "
+                          "treinado neste dataset (classes bus/car/motocycle do data.yaml)")
     args = ap.parse_args()
+
+    if args.classes == "custom":
+        CLASSES, mapa_gt = CLASSES_CUSTOM, GT_IDENTIDADE
+    else:
+        CLASSES, mapa_gt = CLASSES_COCO, ROBOFLOW_PARA_COCO
 
     imagens = sorted(Path(args.imagens).glob("*.jpg")) + sorted(Path(args.imagens).glob("*.png"))
     if not imagens:
         raise SystemExit(f"Nenhuma imagem em {args.imagens}")
 
-    preds_por_img, tamanhos = rodar_deteccoes(args.modelo, imagens, args.conf_min)
+    preds_por_img, tamanhos = rodar_deteccoes(args.modelo, imagens, args.conf_min, CLASSES)
 
     gts_por_img = {c: [] for c in CLASSES}
     for img, w, h in tamanhos:
         txt = Path(args.labels) / (img.stem + ".txt")
-        gt = ler_gt_yolo(txt, w, h)
+        gt = ler_gt_yolo(txt, w, h, CLASSES, mapa_gt)
         for c in CLASSES:
             gts_por_img[c].append(gt[c])
 
