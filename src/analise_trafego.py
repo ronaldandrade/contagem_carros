@@ -1,6 +1,6 @@
 """
     python analise_trafego.py --csv contagens.csv
-    python analise_trafego.py --exemplo     # dados ILUSTRATIVOS, so para testar o layout
+    python analise_trafego.py --exemplo  
 """
 
 import argparse

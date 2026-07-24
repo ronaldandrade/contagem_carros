@@ -151,9 +151,9 @@ O salto é grande e, pensando bem, faz todo sentido: o modelo genérico nunca ti
 
 Só que não vou empolgar demais com o 0,66 sem colocar as ressalvas na mesma frase:
 
-1. **O dataset é minúsculo.** 60 frames anotados, 48 de treino e 12 de validação. Isso está bem abaixo dos 100 a 200 frames que eu mesmo recomendo acima como estimativa razoável. É o mínimo para o pipeline provar que funciona, não um número que eu defenderia como definitivo.
+1. **O dataset é pequeno.** 60 frames anotados, 48 de treino e 12 de validação. Isso está bem abaixo dos 100 a 200 frames que é considerado como estimativa razoável. É o mínimo para o pipeline provar que funciona, não um número que eu defenderia como definitivo. Testarei novamento com mais frames anotados manualmente.
 
-2. **A classe moto não é um resultado real.** No split de validação eu tinha só 1 instância de moto (no dataset inteiro, 95 motos contra 8 ônibus e 134 carros, então a distribuição já é bem desigual entre os frames). AP igual a 0,000 nessa classe não quer dizer que o modelo é ruim em moto, quer dizer que 1 exemplo não permite nenhuma conclusão. Prefiro tratar essa classe como "dados insuficientes" do que publicar o número como se fosse desempenho de verdade.
+2. **A classe moto não é um resultado real.** No split de validação eu tinha só 1 instância de moto, que é a única do dataset inteiro (são 104 caixas anotadas ao todo: 95 carros, 8 ônibus e 1 moto, então a distribuição é bem desigual entre as classes). AP igual a 0,000 nessa classe não quer dizer que o modelo é ruim em moto, quer dizer que 1 exemplo não permite nenhuma conclusão. Prefiro tratar essa classe como "dados insuficientes" do que publicar o número como se fosse desempenho de verdade.
 
 3. **Usei o mesmo split de validação para escolher o melhor checkpoint e para o relatório final.** O ideal seria ter um terceiro split de teste, nunca visto durante o treino, reservado só para a métrica final. Com 60 imagens não dava para fatiar em três com significância estatística, então isso é uma limitação de escala, mas prefiro declarar do que deixar escondido: o mAP relatado provavelmente está um pouco inflado por causa disso.
 
@@ -163,7 +163,7 @@ Só que não vou empolgar demais com o 0,66 sem colocar as ressalvas na mesma fr
 
 Se eu tivesse que resumir esse experimento numa frase para o portfólio, seria: fine-tuning em cerca de 50 frames do próprio cenário elevou o mAP@0,5 de 0,06 para 0,66 e o F1 ideal de 0,15 para 0,92, evidência forte de que o gargalo não era o algoritmo, era o domínio. Mas o tamanho da amostra, especialmente para motos, ainda me impede de alegar qualquer generalização.
 
-## Limitações honestas (diga no conteúdo)
+## Limitações honestas
 
 - **mAP@0.5 é generoso.** O padrão COCO reporta a média de mAP para IoU de 0,5 a 0,95. Rodar `--iou 0.75` mostra quão apertadas são realmente as suas caixas — vale reportar os dois.
 - **Poucos frames = estimativa ruidosa.** 100–200 frames dão ordem de grandeza confiável, não um número de três casas decimais. Não sobreinterprete a terceira casa.

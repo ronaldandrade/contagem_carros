@@ -7,8 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from nucleo_avaliacao import (avaliar_classe, casar_por_imagem,
-                              metricas_por_limiar)
+from nucleo_avaliacao import (avaliar_classe, casar_por_imagem,metricas_por_limiar)
 
 CLASSES_COCO = {2: "carro", 3: "moto", 5: "onibus", 7: "caminhao"}
 # Mapeamento das classes do data.yaml (Roboflow, ordem alfabetica: bus, car, motocycle)
