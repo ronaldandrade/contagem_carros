@@ -1,11 +1,31 @@
+# Ambiente
 .venv/
 __pycache__/
 *.pyc
-*.pt
-*.csv
 .claude/
 .vscode/
-*.MOV
-*.mp4
-frames_*/
-data.yaml
+
+
+# Videos originais
+data/raw/
+
+# Frames extraidos do video: regeraveis com src/extrair_frames.py
+data/frames/
+
+# Splits treino/validacao: regeraveis com src/preparar_split.py
+data/splits/
+
+# Modelos e artefatos de export
+models/
+*.pt
+*.onnx
+*.engine
+
+# Logs de treino do Ultralytics
+runs/
+
+# Saidas de execucao. As tabelas .md e o registro de ambiente .json ficam
+outputs/*.csv
+outputs/*.png
+
+!outputs/contagens.csv
