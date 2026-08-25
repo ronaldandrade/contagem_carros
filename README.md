@@ -137,12 +137,8 @@ em três casos verificáveis à mão.
 
 ## Documentação
 
-- [`docs/estudo_de_caso.md`](docs/estudo_de_caso.md) — o estudo completo, com o diagnóstico do
-  vazamento e a análise dos resultados.
-- [`docs/split_temporal.md`](docs/split_temporal.md) — o vazamento treino/validação
-  medido e corrigido.
-- [`docs/benchmark_formatos.md`](docs/benchmark_formatos.md) — o trade-off entre
-  formatos de deploy.
-- [`docs/avaliacao.md`](docs/avaliacao.md) — as métricas e a análise crítica.
+- [`docs/estudo_de_caso.md`](docs/estudo_de_caso.md) — o estudo completo: as métricas
+  e a matemática da avaliação, o vazamento treino/validação medido e corrigido pelo
+  split temporal, o trade-off entre formatos de deploy e as limitações conhecidas.
 
 Vídeo: https://youtube.com/shorts/Du08CHuX0_A
