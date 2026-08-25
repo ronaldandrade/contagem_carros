@@ -11,6 +11,7 @@ data/raw/
 
 # Frames extraidos do video: regeraveis com src/extrair_frames.py
 data/frames/
+data/frames_lote2/
 
 # Splits treino/validacao: regeraveis com src/preparar_split.py
 data/splits/

@@ -127,6 +127,47 @@ as imagens foram separadas em 48 para treinar e 12 para validar — dataset
 extremamente pequeno, mas proposital, a princípio, para evoluções no estudo mais à
 frente.
 
+### Os frames extraídos
+
+Este é o inventário do que existe em disco, e é a informação de que o corte
+temporal precisa: de qual gravação cada frame veio e em que segundo. Todos os
+frames saem de cabeça para baixo (o script ignora a rotação do arquivo), de forma
+consistente entre os lotes.
+
+| lote | gravação | duração | frames | espaçamento | trecho | estado |
+|---|---|---|---|---|---|---|
+| 1 | `IMG_9575.MOV` | 310,2 s | 60 | 4,77 s | 0 → 310,2 s | **anotado** (163 caixas) |
+| 2 | `IMG_9671.MOV` | 318,0 s | 158 | 2,02 s | 0 → 317,0 s | a anotar |
+| 2 | `IMG_9575.MOV` | 310,2 s | 65 | 4,77 s | 2,4 → 307,6 s | a anotar |
+| | | | **283** | | | |
+
+O tempo de cada frame é `início + i × espaçamento`, com `i` sendo o número no nome
+do arquivo (`frame_%04d.jpg`). O lote 1 está em `data/frames/`; o lote 2 em
+`data/frames_lote2/<gravação>/`, em pastas separadas por gravação porque o script
+nomeia os arquivos só pelo índice e nomes iguais colidiriam.
+
+Duas escolhas do lote 2 que o corte temporal depende:
+
+- **O grosso veio do `IMG_9671`**, a segunda gravação, que nunca tinha sido
+  anotada. É o que faltava para responder "o modelo generaliza?" — até aqui tudo
+  vinha de uma gravação só. Com duas gravações anotadas passa a existir o corte
+  mais limpo possível: treinar em uma, validar inteiramente na outra.
+- **No `IMG_9575` a grade nova é a antiga deslocada 2,4 s**, e não uma amostragem
+  de 2 em 2 segundos. Assim cada frame novo cai no meio de dois já anotados, a
+  **2,15 s no mínimo** de qualquer um deles, em vez de quase colado — retrabalho
+  zero e nenhuma caixa duplicada.
+
+As duas gravações têm iluminação muito diferente: o `IMG_9575` é noturno, com
+faróis acesos, e o `IMG_9671` é luz do dia. Isso amplia a variedade, que é
+justamente o que faltava, mas muda o problema — vale decidir se o modelo deve
+cobrir as duas condições ou se elas são conjuntos separados.
+
+A 2,02 s de espaçamento, frames vizinhos do `IMG_9671` mostram o mesmo veículo:
+283 frames **não** valem como 283 amostras independentes, pela razão explicada
+logo abaixo. A densidade maior serve ao treino e às classes que hoje têm 2 e 1
+instância; a divisão continua tendo de ser por gravação ou por bloco de tempo,
+nunca por sorteio.
+
 ### A lição sobre amostragem
 
 Eu comecei acreditando que 60 a 100 frames já davam uma estimativa estável. Está
