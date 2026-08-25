@@ -1,0 +1,42 @@
+{
+  "ambiente": {
+    "data_utc": "2026-08-25T00:03:53+00:00",
+    "python": "3.11.3",
+    "so": "Linux 5.15.0-139-generic",
+    "torch": "2.6.0+cu124",
+    "ultralytics": "8.4.104",
+    "cuda_torch": "12.4",
+    "cudnn": 90100,
+    "tensorrt": "11.2.1.2",
+    "onnxruntime": "1.24.4",
+    "onnxruntime_providers": [
+      "TensorrtExecutionProvider",
+      "CUDAExecutionProvider",
+      "CPUExecutionProvider"
+    ],
+    "gpu": "NVIDIA GeForce RTX 3050 Laptop GPU",
+    "capability": "8.6",
+    "driver": "535.230.02",
+    "commit": "a13489a"
+  },
+  "args": {
+    "modelo": "runs/detect/runs/split_estudo/temporal/weights/best.pt",
+    "imagens": "data/yolo_dataset_temporal/images/val",
+    "labels": "data/yolo_dataset_temporal/labels/val",
+    "data_calib": "data/yolo_dataset_temporal/data.yaml",
+    "classes": "custom",
+    "formatos": [
+      "pytorch_fp32",
+      "onnx_fp32",
+      "trt_fp16",
+      "trt_int8"
+    ],
+    "imgsz": 640,
+    "repeticoes": 200,
+    "aquecimento": 30,
+    "iou": 0.5,
+    "conf_min": 0.001,
+    "refazer_export": false,
+    "saida": "outputs/benchmark_formatos_temporal"
+  }
+}
