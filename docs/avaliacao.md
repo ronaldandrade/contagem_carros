@@ -38,7 +38,7 @@ A regra melhor: espaçamento maior que o tempo que um veículo leva para cruzar 
 
 ## Passo 2 — Anotar (o trabalho manual, inevitável e valioso)
 
-Isto é o *ground truth* (verdade de referência): você desenha, à mão, a caixa correta de cada veículo em cada frame. É trabalhoso de propósito — é o padrão-ouro contra o qual o modelo é julgado.
+Isto é o *ground truth* (verdade de referência): você desenha, à mão, a caixa correta de cada veículo em cada frame. É trabalhoso de propósito, é o padrão-ouro contra o qual o modelo é julgado.
 
 Ferramentas gratuitas que exportam no formato YOLO: **LabelImg**, **Label Studio**, **CVAT** ou **Roboflow**. Configure a saída para "YOLO".
 
@@ -59,15 +59,13 @@ Trocar essa opção por engano zera o resultado, porque a comparação passa a s
 
 ```bash
 # modelo genérico, pré-treinado no COCO
-python src/avaliar_detector.py --imagens data/frames_yolo --labels data/labels \
-    --modelo yolov8n.pt --classes coco --iou 0.5
+python src/avaliar_detector.py --modelo models/yolov8n.pt --classes coco --iou 0.5
 
 # modelo treinado neste dataset
-python src/avaliar_detector.py --imagens data/frames_yolo --labels data/labels \
-    --modelo runs/detect/runs/treino_trafego/weights/best.pt --classes custom --iou 0.5
+python src/avaliar_detector.py --modelo models/split_temporal.pt --classes custom --iou 0.5
 ```
 
-Saída: AP por classe, mAP@0.5, o gráfico com as duas curvas e uma tabela `metricas_por_limiar.csv` com precisão/recall/F1 para cada limiar de confiança. Cada execução sobrescreve esses arquivos, então renomeie entre uma e outra se quiser guardar os dois resultados.
+Saída: AP por classe, mAP@0.5, o gráfico com as duas curvas e uma tabela com precisão/recall/F1 para cada limiar de confiança. Os arquivos vão para `outputs/` com o nome derivado do modelo e do conjunto (`metricas_<modelo>_<split>.csv`, `avaliacao_<modelo>_<split>.png`), então execuções com modelos diferentes não se sobrescrevem.
 
 ---
 
@@ -85,16 +83,16 @@ $$
 
 ### Casamento predição↔realidade (o passo delicado)
 
-Detecção não vem rotulada como certa ou errada — é preciso **casar** cada predição com uma caixa real. A regra (`casar_por_imagem`), que é o padrão da área:
+Detecção não vem rotulada como certa ou errada, é preciso **casar** cada predição com uma caixa real. A regra (`casar_por_imagem`), que é o padrão da área:
 
 1. Ordene as predições do frame por confiança, da maior para a menor.
 2. Para cada predição, na ordem, pegue a caixa real de maior IoU **ainda não usada**.
 3. Se esse IoU ≥ 0,5 → é um **verdadeiro positivo (TP)**, e aquela caixa real fica "consumida" (não pode casar de novo).
 4. Senão → **falso positivo (FP)**.
 
-O detalhe crucial é o "ainda não usada": cada veículo real pode ser contado como acerto **uma única vez**. Se o modelo cospe três caixas no mesmo carro, uma é TP e as outras duas são FP — que é o comportamento correto e, de novo, algo que o seu ângulo difícil provoca bastante.
+O detalhe crucial é o "ainda não usada": cada veículo real pode ser contado como acerto **uma única vez**. Se o modelo cospe três caixas no mesmo carro, uma é TP e as outras duas são FP, que é o comportamento correto e, de novo, algo que o ângulo difícil provoca bastante.
 
-### Precisão e recall — dois erros que competem
+### Precisão e recall: dois erros que competem
 
 Com cada predição marcada como TP ou FP, e sabendo quantos veículos reais existiam (o total de GT), definimos:
 
