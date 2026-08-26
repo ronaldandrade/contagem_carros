@@ -1,9 +1,4 @@
-"""Avalia um detector contra as caixas marcadas a mao e gera tabela e grafico.
-
-As contas ficam em nucleo_avaliacao.py (numpy puro, testavel sozinho); a ponte com
-o YOLO fica em deteccao.py. Aqui e so orquestracao e apresentacao.
-
-Uso:
+"""
     python src/avaliar_detector.py --modelo models/split_temporal.pt --classes custom
 """
 
@@ -28,7 +23,7 @@ def main():
     ap.add_argument("--modelo", default="models/split_temporal.pt")
     ap.add_argument("--imagens", default="data/splits/temporal/images/val")
     ap.add_argument("--labels", default="data/splits/temporal/labels/val")
-    ap.add_argument("--classes", choices=["coco", "custom"], default="custom",
+    ap.add_argument("--classes", choices=["coco", "custom", "custom4"], default="custom",
                     help="'coco' para modelo pre-treinado; 'custom' para modelo "
                          "treinado neste dataset")
     ap.add_argument("--iou", type=float, default=0.5)

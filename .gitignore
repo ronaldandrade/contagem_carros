@@ -1,32 +1,67 @@
 # Ambiente
 .venv/
+venv/
+env/
 __pycache__/
-*.pyc
+*.py[cod]
+.Python
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Editor e sistema operacional
 .claude/
 .vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
 
+# ---------------------------------------------------------------- dados
+# Sob data/ so vao versionados os ROTULOS (data/data2/labels/) e o exemplo
+# minimo em data/exemplo/. Video e imagem ficam de fora: sao centenas de MB e
+# nao pertencem a um repositorio de codigo.
 
 # Videos originais
 data/raw/
 
-# Frames extraidos do video: regeraveis com src/extrair_frames.py
-data/frames/
-data/frames_lote2/
+# Toda imagem sob data/ -- a regra e por extensao, e nao por pasta, para
+# continuar valendo quando o dataset for reorganizado.
+data/**/*.jpg
+data/**/*.jpeg
+data/**/*.png
+data/**/*.bmp
+data/**/*.mp4
+data/**/*.mov
+data/**/*.MOV
+data/**/*.avi
 
-# Splits treino/validacao: regeraveis com src/preparar_split.py
+# ... menos o exemplo, que precisa da imagem para o formato fazer sentido.
+!data/exemplo/images/*.jpg
+
+# Splits treino/validacao: derivados, regerados por comando a partir dos
+# rotulos e das imagens.
+#   data/splits1/  <- src/preparar_split.py
+#   data/splits2/  <- src/preparar_split_data2.py
 data/splits/
+data/splits1/
+data/splits2/
+data/data1/splits/
 
-# Modelos e artefatos de export
+# ---------------------------------------------------------------- artefatos
+# Modelos e exports
 models/
 *.pt
 *.onnx
 *.engine
+*.trt
 
 # Logs de treino do Ultralytics
 runs/
 
-# Saidas de execucao. As tabelas .md e o registro de ambiente .json ficam
+# Saidas de execucao: as tabelas .md e o registro de ambiente .json ficam
 outputs/*.csv
 outputs/*.png
-
 !outputs/contagens.csv

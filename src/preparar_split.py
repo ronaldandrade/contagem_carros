@@ -1,23 +1,4 @@
 """Gera um split treino/validacao a partir da fonte unica (data/frames + data/labels).
-
-Splits sao DERIVADOS, nao fonte: nada em data/splits/ e versionado, tudo e
-reconstruido por este script. A fonte sao os 60 frames e os 60 arquivos de rotulo.
-
-Dois modos:
-
-  temporal  (padrao)  validacao = bloco CONTIGUO no fim do video, separada do
-                      treino por uma zona-tampao de frames descartados.
-  aleatorio           validacao sorteada, reproduzindo o split original -- serve
-                      como braco de controle para MEDIR o vazamento, nao para
-                      treinar um modelo que se leve a serio.
-
-Por que o temporal e o correto: frames vizinhos do mesmo video mostram os MESMOS
-veiculos quase na mesma posicao (58% das caixas tem IoU >= 0,5 com uma caixa do
-frame anterior). Sortear frames coloca o mesmo veiculo nos dois lados da divisao --
-no split original, os 12 frames de validacao tinham TODOS um vizinho imediato no
-treino. A zona-tampao existe para que nenhum veiculo cruze a fronteira.
-
-Uso:
     python src/preparar_split.py                       # temporal
     python src/preparar_split.py --modo aleatorio      # controle
 """
@@ -33,13 +14,20 @@ NOMES = {0: "onibus", 1: "carro", 2: "moto"}
 
 
 def coletar(frames_dir, labels_dir):
-    """Indexa a fonte por numero de frame."""
+    """Indexa a fonte por numero de frame.
+
+    O rotulo e procurado pelo nome em qualquer nivel abaixo de labels_dir: os 60
+    rotulos deste dataset hoje moram espalhados nos tres subdiretorios do export
+    do data2 (train/valid/test), e o nome de arquivo -- que o Roboflow preservou
+    -- e o que identifica cada um.
+    """
+    rotulos = {t.stem: t for t in Path(labels_dir).rglob("*.txt")}
     itens = {}
     for img in sorted(Path(frames_dir).glob("*.jpg")):
         m = re.match(r"frame_(\d+)", img.name)
         if not m:
             continue
-        itens[int(m.group(1))] = (img, Path(labels_dir) / (img.stem + ".txt"))
+        itens[int(m.group(1))] = (img, rotulos.get(img.stem, Path(labels_dir) / (img.stem + ".txt")))
     if not itens:
         raise SystemExit(f"Nenhum frame em {frames_dir}")
     return itens
@@ -79,10 +67,10 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--modo", choices=["temporal", "aleatorio"], default="temporal")
-    ap.add_argument("--frames", default="data/frames")
-    ap.add_argument("--labels", default="data/labels")
+    ap.add_argument("--frames", default="data/data1/frames")
+    ap.add_argument("--labels", default="data/data2/labels")
     ap.add_argument("--destino", default=None,
-                    help="padrao: data/splits/<modo>")
+                    help="padrao: data/splits1/<modo>")
     ap.add_argument("--val-inicio", type=int, default=52,
                     help="temporal: primeiro frame do bloco de validacao")
     ap.add_argument("--tampao", type=int, default=4,
@@ -94,7 +82,7 @@ def main():
 
     itens = coletar(args.frames, args.labels)
     ns = sorted(itens)
-    destino = Path(args.destino or f"data/splits/{args.modo}")
+    destino = Path(args.destino or f"data/splits1/{args.modo}")
 
     if args.modo == "temporal":
         val = [n for n in ns if n >= args.val_inicio]

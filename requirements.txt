@@ -6,16 +6,9 @@ pandas==3.0.5
 ultralytics==8.4.104
 lap==0.5.13
 
-# Benchmark de formatos (src/benchmark_formatos.py) -- exige GPU NVIDIA.
-# torch/torchvision vem do indice da PyTorch, nao do PyPI:
-#   pip install torch==2.6.0 torchvision==0.21.0 \
-#       --index-url https://download.pytorch.org/whl/cu124
 torch==2.6.0+cu124
 torchvision==0.21.0+cu124
 onnx==1.21.0
 onnxruntime-gpu==1.24.4
 tensorrt_cu12==11.2.1.2
-# TensorRT 11 e strongly-typed: removeu BuilderFlag.FP16/INT8 e IInt8Calibrator.
-# O ultralytics assa a precisao no proprio ONNX (cast para FP16, Q/DQ para INT8)
-# usando o modelopt, entao ele nao e opcional para os formatos TensorRT.
 nvidia-modelopt==0.45.0

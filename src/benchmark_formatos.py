@@ -1,22 +1,5 @@
 """Mede o trade-off velocidade x acuracia x tamanho entre formatos de deploy.
 
-Formatos comparados, na ordem em que o modelo "desce" para producao:
-
-    PyTorch FP32  ->  ONNX FP32  ->  TensorRT FP16  ->  TensorRT INT8
-
-Para cada um mede, no MESMO conjunto de imagens e com o MESMO imgsz:
-
-  - tamanho do artefato em disco (MB)
-  - latencia de inferencia pura (ms/imagem, mediana e p95)
-  - latencia fim-a-fim, incluindo pre e pos-processamento (ms/imagem)
-  - mAP@IoU e melhor F1, calculados com o nucleo de avaliacao do proprio
-    projeto (src/nucleo_avaliacao.py), nao com a metrica interna do YOLO
-
-A separacao entre "inferencia pura" e "fim-a-fim" importa: pre e pos-processamento
-rodam em CPU e sao identicos nos quatro formatos, entao diluem o ganho da
-quantizacao. Reportar so o numero fim-a-fim esconde o efeito que o estudo mede.
-
-Uso:
     python src/benchmark_formatos.py \
         --modelo runs/detect/runs/treino_trafego/weights/best.pt --classes custom
 """
@@ -198,7 +181,7 @@ def main():
     ap.add_argument("--labels", default="data/splits/temporal/labels/val")
     ap.add_argument("--data-calib", default="data/splits/temporal/data.yaml",
                     help="data.yaml com as imagens usadas para calibrar o INT8")
-    ap.add_argument("--classes", choices=["coco", "custom"], default="custom")
+    ap.add_argument("--classes", choices=["coco", "custom", "custom4"], default="custom")
     ap.add_argument("--formatos", nargs="+", default=ORDEM_PADRAO, choices=ORDEM_PADRAO)
     ap.add_argument("--imgsz", type=int, default=640)
     ap.add_argument("--repeticoes", type=int, default=200)

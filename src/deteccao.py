@@ -1,11 +1,3 @@
-"""Ponte entre o YOLO e o nucleo de avaliacao: rodar o modelo e ler o gabarito.
-
-Existe para que `nucleo_avaliacao.py` continue sendo so numpy -- sem YOLO, sem
-leitura de arquivo, sem desenho -- e para que `avaliar_detector.py` e
-`benchmark_formatos.py` nao repitam o mesmo laco de deteccao.
-
-Nada aqui calcula metrica. Este modulo produz arrays; quem calcula e o nucleo.
-"""
 
 from pathlib import Path
 
@@ -21,11 +13,20 @@ ROBOFLOW_PARA_COCO = {0: 5, 1: 2, 2: 3}
 CLASSES_CUSTOM = {0: "onibus", 1: "carro", 2: "moto"}
 GT_IDENTIDADE = {0: 0, 1: 1, 2: 2}
 
+# O data2 acrescentou uma quarta classe (caminhao) mantendo os IDs 0/1/2 do data1
+# -- 100% das caixas do data1 reaparecem inalteradas no data2. Por isso um modelo
+# de 3 classes e um de 4 classes podem ser medidos no MESMO gabarito: a linha de
+# 'carro' significa a mesma coisa nos dois.
+CLASSES_CUSTOM4 = {0: "onibus", 1: "carro", 2: "moto", 3: "caminhao"}
+GT_IDENTIDADE4 = {0: 0, 1: 1, 2: 2, 3: 3}
+
 
 def mapas_de_classe(modo):
-    """'coco' para modelo pre-treinado, 'custom' para modelo treinado no dataset."""
+    """'coco' para modelo pre-treinado, 'custom'/'custom4' para treinado no dataset."""
     if modo == "custom":
         return CLASSES_CUSTOM, GT_IDENTIDADE
+    if modo == "custom4":
+        return CLASSES_CUSTOM4, GT_IDENTIDADE4
     return CLASSES_COCO, ROBOFLOW_PARA_COCO
 
 
